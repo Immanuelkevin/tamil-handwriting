@@ -171,8 +171,8 @@ def extract_and_vectorize(filled_image_path, positions):
         crop.save(png_path)
         
         cv_img = cv2.imread(png_path, cv2.IMREAD_GRAYSCALE)
-        # Use 140 instead of 200 to make the lines look thinner and more natural
-        _, thresh = cv2.threshold(cv_img, 140, 255, cv2.THRESH_BINARY_INV)
+        # Use 220 to ensure light blue/pencil handwriting is captured properly
+        _, thresh = cv2.threshold(cv_img, 220, 255, cv2.THRESH_BINARY_INV)
         
         # Erase the outer 2 pixels strictly to prevent border bleed
         thresh[0:2, :] = 0
