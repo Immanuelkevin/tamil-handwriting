@@ -41,7 +41,7 @@ export function FontPreview({ onNext, fontUrl }: FontPreviewProps) {
     const fontFaceRule = `
       @font-face {
         font-family: 'CustomTamilFont';
-        src: url('/TamilHandWritten.ttf?t=${Date.now()}') format('truetype');
+        src: url('${fontUrl}') format('truetype');
         font-weight: normal;
         font-style: normal;
       }
@@ -67,7 +67,8 @@ export function FontPreview({ onNext, fontUrl }: FontPreviewProps) {
     setIsSaving(true)
     
     try {
-      const response = await fetch('http://localhost:8000/api/save-font', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/save-font`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
