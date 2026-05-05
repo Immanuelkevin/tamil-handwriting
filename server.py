@@ -19,6 +19,10 @@ except ImportError:
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Tamil Handwriting API is running"}
+
 # Allow CORS for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
@@ -331,9 +335,9 @@ async def generate_font(request: Request, template: UploadFile = File(...)):
         print(f"Post-build validation ERROR: {_e} - font is corrupt!")
         return JSONResponse(status_code=500, content={"error": f"Generated font is not valid: {str(_e)}"})
         
-    # CRITICAL: Copy to frontend public folder so Next.js can serve it!
+    # CRITICAL: Copy to public folder so Next.js can serve it!
     try:
-        shutil.copy("output_font/TamilHandwritten.ttf", "frontend/public/TamilHandWritten.ttf")
+        shutil.copy("output_font/TamilHandwritten.ttf", "public/TamilHandWritten.ttf")
     except Exception as e:
         print(f"Warning: Failed to copy font to public: {e}")
         
