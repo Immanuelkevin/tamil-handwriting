@@ -29,22 +29,26 @@ app.add_middleware(
 )
 
 tamil_chars = [
-    # ── SECTION 1: Pure Vowels / Uyir (12) ──
+    # ── SECTION 1: Pure Vowels / Uyir (12) — boxes 1-12 ──
     'அ', 'ஆ', 'இ', 'ஈ', 'உ', 'ஊ', 'எ', 'ஏ', 'ஐ', 'ஒ', 'ஓ', 'ஔ',
 
-    # ── SECTION 2: Aytham (1) ──
+    # ── SECTION 2: Aytham (1) — box 13 ──
     'ஃ',
 
-    # ── SECTION 3: Pure Consonants / Mei (18) ──
+    # ── SECTION 3: Pure Consonants / Mei (18) — boxes 14-31 ──
     'க', 'ங', 'ச', 'ஞ', 'ட', 'ண', 'த', 'ந', 'ப', 'ம',
     'ய', 'ர', 'ல', 'வ', 'ழ', 'ள', 'ற', 'ன',
 
-    # ── SECTION 4: Uyirmei (18 consonants × 12 vowels = 216) ──
-    # Each row: [a, aa, i, ii, u, uu, e, ee, ai, o, oo, au]
+    # ── SECTION 4: Consonant + Pulli (18) — boxes 32-49 ──
+    'க்', 'ங்', 'ச்', 'ஞ்', 'ட்', 'ண்', 'த்', 'ந்', 'ப்', 'ம்',
+    'ய்', 'ர்', 'ல்', 'வ்', 'ழ்', 'ள்', 'ற்', 'ன்',
 
-    # க row
+    # ── SECTION 5: Uyirmei (18 × 12 = 216) — boxes 50-265 ──
+    # Each row: [consonant, aa, i, ii, u, uu, e, ee, ai, o, oo, au]
+
+    # க row — boxes 50-61
     'க', 'கா', 'கி', 'கீ', 'கு', 'கூ', 'கெ', 'கே', 'கை', 'கொ', 'கோ', 'கௌ',
-    # ங row
+    # ங row — boxes 62-73
     'ங', 'ஙா', 'ஙி', 'ஙீ', 'ஙு', 'ஙூ', 'ஙெ', 'ஙே', 'ஙை', 'ஙொ', 'ஙோ', 'ஙௌ',
     # ச row
     'ச', 'சா', 'சி', 'சீ', 'சு', 'சூ', 'செ', 'சே', 'சை', 'சொ', 'சோ', 'சௌ',
@@ -161,8 +165,10 @@ def extract_and_vectorize(filled_image_path, positions):
 """
     
     for char, pos in positions.items():
-        pad = 5
-        clean_pos = (pos[0] + pad, pos[1] + pad, pos[2] - pad, pos[3] - pad)
+        # Balanced padding to avoid cropping the tops of your handwriting
+        pad_side = 5
+        pad_top = 8  # Reduced from 22 to fix "improper cropping"
+        clean_pos = (pos[0] + pad_side, pos[1] + pad_top, pos[2] - pad_side, pos[3] - 2)
         crop = img.crop(clean_pos)
         
         char_hex = "_".join([hex(ord(c))[2:].upper() for c in char])
@@ -224,6 +230,8 @@ def extract_and_vectorize(filled_image_path, positions):
         ("ெ", "uni0BC6", "M 300 100 C 200 100, 200 400, 300 400 C 400 400, 400 700, 300 700 C 200 700, 200 500, 300 500 L 300 600 C 250 600, 250 650, 300 650 C 350 650, 350 450, 300 450 C 250 450, 250 150, 300 150 Z", 1000),
         ("ே", "uni0BC7", "M 300 100 C 200 100, 200 400, 300 400 C 400 400, 400 700, 300 700 C 200 700, 200 500, 300 500 L 300 600 C 250 600, 250 650, 300 650 C 350 650, 350 450, 300 450 C 250 450, 250 150, 300 150 Z M 500 100 C 400 100, 400 400, 500 400 C 600 400, 600 700, 500 700 C 400 700, 400 500, 500 500 L 500 600 C 450 600, 450 650, 500 650 C 550 650, 550 450, 500 450 C 450 450, 450 150, 500 150 Z", 1000),
         ("ை", "uni0BC8", "M 200 0 C 100 0, 100 200, 200 300 C 300 400, 100 400, 100 600 C 100 800, 300 800, 300 600 C 300 400, 100 400, 200 300 C 300 200, 300 0, 200 0 Z M 200 100 C 250 100, 250 200, 200 250 C 150 200, 150 100, 200 100 Z M 200 500 C 150 500, 150 700, 200 700 C 250 700, 250 500, 200 500 Z", 1000),
+        ("ொ", "uni0BCA", "M 0 0 L 0 0 Z", 0),
+        ("ோ", "uni0BCB", "M 0 0 L 0 0 Z", 0),
         ("ௌ", "uni0BD7", extracted_paths.get('ள', ''), 1000)
     ]
     
@@ -277,8 +285,14 @@ legacy_30_chars = [
 # --- API Endpoints ---
 @app.get("/api/template")
 async def get_template():
-    create_template_image("template.png", tamil_chars)
-    return FileResponse("template.png", media_type="image/png", filename="tamil-font-template.png")
+    # Serve the blank template (generated from temp sample.png) directly
+    if os.path.exists("blank_template.png"):
+        return FileResponse("blank_template.png", media_type="image/png", filename="tamil-font-template.png")
+    elif os.path.exists("temp sample.png"):
+        return FileResponse("temp sample.png", media_type="image/png", filename="tamil-font-template.png")
+    else:
+        create_template_image("template.png", tamil_chars)
+        return FileResponse("template.png", media_type="image/png", filename="tamil-font-template.png")
 
 @app.post("/api/generate-font")
 async def generate_font(request: Request, template: UploadFile = File(...)):

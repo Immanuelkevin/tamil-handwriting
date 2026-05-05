@@ -81,43 +81,10 @@ function buildPositions() {
   return positions
 }
 
-function generateTemplateCanvas(): HTMLCanvasElement {
-  const positions = buildPositions()
-  const rows = Math.ceil(TAMIL_CHARS.length / COLS)
-  const imgHeight = rows * (BOX_SIZE + SPACING + ROW_GAP) + Y_START + BOX_SIZE
-
-  const canvas = document.createElement("canvas")
-  canvas.width = IMG_WIDTH
-  canvas.height = imgHeight
-  const ctx = canvas.getContext("2d")!
-
-  // White background
-  ctx.fillStyle = "#ffffff"
-  ctx.fillRect(0, 0, IMG_WIDTH, imgHeight)
-
-  positions.forEach(({ char, x, y }, idx) => {
-    // Draw box (light grey border — matches server.py #e0e0e0)
-    ctx.strokeStyle = "#e0e0e0"
-    ctx.lineWidth = 1
-    ctx.strokeRect(x, y, BOX_SIZE, BOX_SIZE)
-
-    // Draw box number inside top-left (grey)
-    ctx.fillStyle = "#aaaaaa"
-    ctx.font = `${SMALL_FONT_SIZE}px sans-serif`
-    ctx.textAlign = "left"
-    ctx.textBaseline = "top"
-    ctx.fillText(String(idx + 1), x + 4, y + 4)
-
-    // Draw Tamil character label above the box
-    // Browser Canvas uses HarfBuzz → perfect Tamil shaping including split vowels
-    ctx.fillStyle = "#000000"
-    ctx.font = `${FONT_SIZE}px 'Nirmala UI', 'Latha', 'Vijaya', serif`
-    ctx.textAlign = "center"
-    ctx.textBaseline = "alphabetic"
-    ctx.fillText(char, x + BOX_SIZE / 2, y - 8)
-  })
-
-  return canvas
+function generateTemplateCanvas(): string {
+  // We no longer generate the canvas on the frontend because we are using a 
+  // pre-generated template file (temp sample.png) from the backend.
+  return "";
 }
 
 export function TemplateDownload({ onContinue }: TemplateDownloadProps) {
@@ -125,28 +92,31 @@ export function TemplateDownload({ onContinue }: TemplateDownloadProps) {
   const [isHovering, setIsHovering] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setIsGenerating(true)
-    // Use setTimeout so the UI updates before the heavy canvas work
-    setTimeout(() => {
-      try {
-        const canvas = generateTemplateCanvas()
-        canvas.toBlob((blob) => {
-          if (!blob) { setIsGenerating(false); return }
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement("a")
-          link.href = url
-          link.download = "tamil-font-template.png"
-          link.click()
-          URL.revokeObjectURL(url)
-          setDownloaded(true)
-          setIsGenerating(false)
-        }, "image/png")
-      } catch (e) {
-        console.error("Template generation failed", e)
-        setIsGenerating(false)
-      }
-    }, 50)
+    try {
+      // Determine API URL based on environment
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+      
+      const response = await fetch(`${API_URL}/api/template`)
+      if (!response.ok) throw new Error("Failed to download template")
+      
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "tamil-font-template.png"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      setDownloaded(true)
+    } catch (e) {
+      console.error("Template generation failed", e)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   return (
