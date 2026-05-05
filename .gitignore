@@ -1,31 +1,17 @@
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
+# v0 sandbox internal files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+next.user-config.*
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
+# Environment variables
+.env*.local
 
-# Generated files / Temp files
-output_font/
-extracted_images/
-svgs/
-temp*.png
-debug_*.png
-test.png
-t.png
-template*.png
-*.zip
-
-# OS Files
+# Common ignores
+node_modules
+.next/
 .DS_Store
-Thumbs.db
+.vercel
